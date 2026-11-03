@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "execute-request.schema.json",
+  "title": "Journey Builder → activity: POST /ca/{sync|async}/execute (decoded JWT payload)",
+  "description": "Body Journey Builder sends per contact. With useJwt=true the HTTP body is a compact HS256 JWT string signed with the installed package JWT Signing Secret; this schema describes the decoded payload. Journey Builder may add fields; consumers must ignore unknown properties.",
+  "type": "object",
+  "required": ["inArguments"],
+  "properties": {
+    "inArguments": {
+      "type": "array",
+      "description": "Array of single-key objects, already data-bound (no {{ }} left). Flatten with Object.assign({}, ...inArguments).",
+      "items": { "type": "object", "maxProperties": 1 },
+      "examples": [[{ "contactKey": "EXP-100231" }, { "threshold": "0.6" }]]
+    },
+    "outArguments": { "type": "array" },
+    "activityObjectID": { "type": "string", "format": "uuid" },
+    "journeyId": { "type": "string", "format": "uuid" },
+    "activityId": { "type": "string", "format": "uuid" },
+    "definitionInstanceId": { "type": "string", "format": "uuid" },
+    "activityInstanceId": { "type": "string", "format": "uuid" },
+    "keyValue": { "type": "string", "description": "Contact key of the contact in the journey." },
+    "mode": { "type": "integer", "description": "0 = live journey execution." },
+    "exp": { "type": "integer", "description": "JWT expiry (epoch seconds)." },
+    "iat": { "type": "integer" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model eventing to the data extension · Expedia saturation demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="eventing">
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="logo" href="/" aria-label="Expedia saturation model demo home"><img src="/expedia-logo.png" alt="Expedia"></a>
+    <nav class="pathways" aria-label="Pathway">
+      <a href="/">Journey callouts (sync / async)</a>
+      <a href="/event.html" aria-current="page">Model eventing to the DE</a>
+    </nav>
+  </div>
+</header>
+
+<section class="demarc" aria-labelledby="demarcTitle">
+  <div class="wrap demarc-row">
+    <div>
+      <h1 id="demarcTitle">The model events its answer into a data extension</h1>
+      <p>No journey callouts on this page. When a traveler's inputs change, the model rescores and upserts one row into
+        <code>Expedia_Saturation_Predictions</code>. Journeys read it as Contact Data whenever they need it.</p>
+    </div>
+    <ol class="eflow" aria-label="What happens on every change">
+      <li>Input changes</li>
+      <li>Model rescores</li>
+      <li>REST upsert to the DE</li>
+      <li>Decision split reads Contact Data</li>
+    </ol>
+  </div>
+</section>
+
+<section class="wrap ev-grid">
+  <div>
+    <div class="ev-head">
+      <h2>Model inputs</h2>
+      <label class="field inline">
+        <span>Abstain above <output id="thr">0.65</output></span>
+        <input id="threshold" type="range" min="0.3" max="0.95" step="0.01" value="0.65">
+      </label>
+    </div>
+    <p class="sub">Change anything and the new prediction goes straight to Marketing Cloud.</p>
+    <div class="ev-travelers" id="travelers"></div>
+  </div>
+  <aside class="de-panel" aria-labelledby="deTitle">
+    <div class="de-head">
+      <h2 id="deTitle">In Marketing Cloud now</h2>
+      <button class="btn outline small" id="refresh">Read the DE again</button>
+    </div>
+    <p class="sub" id="deSub">Read live from <code>Expedia_Saturation_Predictions</code>.</p>
+    <table class="de-table">
+      <thead><tr><th scope="col">SubscriberKey</th><th scope="col">Prediction</th><th scope="col">Score</th><th scope="col">Hold</th><th scope="col">Source</th><th scope="col">Scored at</th></tr></thead>
+      <tbody id="deRows"></tbody>
+    </table>
+    <ol class="ev-log" id="log" aria-live="polite"></ol>
+  </aside>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/event.js"></script>
+</body>
+</html>

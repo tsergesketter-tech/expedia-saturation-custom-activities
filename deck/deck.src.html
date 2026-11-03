@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expedia decisioning working session</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #191e3b;
+  --blue: #1568e3;
+  --blue-soft: #e8f0fd;
+  --yellow: #fddb32;
+  --yellow-soft: #fff6c7;
+  --gold: #a88200;
+  --mist: #eff3f7;
+  --line: #dfe0e4;
+  --muted: #5f6378;
+  --send: #227950;
+  --abstain: #b3261e;
+  --sans: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #c9ced8; overflow: hidden; }
+body { font-family: var(--sans); color: var(--navy); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ul, ol, dl, dd { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+code, .code { font-family: var(--mono); font-size: 0.86em; }
+
+/* ---------- stage ---------- */
+.stage { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px; transform-origin: 0 0; }
+.slide { position: absolute; inset: 0; background: #fff; padding: 64px 80px 0; display: none; overflow: hidden; }
+.slide.active { display: block; }
+.slide > h2 { font-family: var(--serif); font-weight: 500; font-size: 52px; line-height: 1.08; letter-spacing: -0.01em; max-width: 1180px; }
+.slide > .lede { font-size: 22px; line-height: 1.45; color: var(--muted); margin-top: 14px; max-width: 980px; }
+.foot { position: absolute; left: 80px; right: 220px; bottom: 26px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; color: var(--muted); }
+.foot img { height: 20px; display: block; }
+
+.controls { position: fixed; right: 20px; bottom: 16px; display: flex; gap: 8px; align-items: center; font-size: 14px; color: #3b4060; z-index: 5; }
+.controls button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid #aab0bf; background: #fff; display: grid; place-items: center; }
+.controls button:disabled { opacity: 0.35; cursor: default; }
+.progress { position: fixed; left: 0; top: 0; height: 4px; background: var(--blue); transition: width 0.25s ease; z-index: 5; }
+@media (prefers-reduced-motion: reduce) { .progress { transition: none; } }
+
+/* ---------- 1 title ---------- */
+#s-title { background: var(--mist); padding: 0; }
+#s-title .logo { position: absolute; left: 80px; top: 64px; height: 40px; }
+#s-title h1 { position: absolute; left: 80px; top: 250px; width: 760px; font-family: var(--serif); font-weight: 500; font-size: 92px; line-height: 1.0; letter-spacing: -0.02em; }
+#s-title .sub { position: absolute; left: 80px; top: 560px; width: 700px; font-size: 24px; line-height: 1.45; color: var(--muted); }
+#s-title .who { position: absolute; left: 80px; bottom: 64px; font-size: 18px; color: var(--muted); }
+.verdicts { position: absolute; right: 80px; top: 200px; width: 600px; display: grid; gap: 22px; }
+.verdict { background: var(--navy); color: #fff; border-radius: 22px; padding: 30px 34px; display: grid; grid-template-columns: auto 1fr; gap: 6px 24px; align-items: center; }
+.verdict .score { grid-row: span 2; font-weight: 700; font-size: 34px; border-radius: 14px; padding: 14px 16px; }
+.verdict .score.abstain { background: var(--abstain); }
+.verdict .score.send { background: var(--send); }
+.verdict b { font-family: var(--serif); font-weight: 500; font-size: 32px; line-height: 1.1; }
+.verdict small { font-size: 17px; color: #c3c7d8; line-height: 1.4; }
+.verdict.light { background: #fff; color: var(--navy); box-shadow: 0 1px 0 var(--line); border: 1px solid var(--line); }
+.verdict.light small { color: var(--muted); }
+
+/* ---------- 2 agenda ---------- */
+.agenda { margin-top: 36px; display: grid; gap: 0; max-width: 1240px; counter-reset: ag; }
+.agenda li { counter-increment: ag; display: grid; grid-template-columns: 88px 1fr 380px; align-items: baseline; padding: 18px 0; border-top: 1px solid var(--line); }
+.agenda li:last-child { border-bottom: 1px solid var(--line); }
+.agenda li::before { content: counter(ag); font-family: var(--serif); font-size: 44px; color: var(--blue); line-height: 1; }
+.agenda b { font-size: 28px; font-weight: 600; line-height: 1.25; }
+.agenda span { font-size: 18px; color: var(--muted); line-height: 1.4; }
+.owner { display: inline-block; margin-left: 12px; font-style: normal; font-size: 15px; font-weight: 600; vertical-align: 4px; background: var(--yellow); color: var(--navy); border-radius: 99px; padding: 3px 12px; }
+
+/* ---------- 3 needs ---------- */
+.needs { margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 36px; max-width: 1440px; }
+.need { border-top: 4px solid var(--navy); padding-top: 18px; }
+.need h3 { font-size: 25px; font-weight: 600; line-height: 1.25; }
+.need p { font-size: 18px; line-height: 1.5; color: var(--muted); margin-top: 10px; }
+.need q { display: block; margin-top: 14px; font-family: var(--serif); font-size: 19px; line-height: 1.4; color: var(--navy); quotes: none; background: var(--yellow-soft); padding: 10px 14px; border-radius: 4px; }
+.need.wide { grid-column: span 2; }
+
+/* ---------- 4 architecture ---------- */
+#s-arch > h2 { font-size: 44px; }
+.arch { position: absolute; inset: 0; }
+.arch .box { position: absolute; border-radius: 14px; }
+.arch .container { border: 2px solid var(--line); background: #fff; }
+.arch .container > h3 { position: absolute; left: 20px; top: 14px; font-size: 19px; font-weight: 700; }
+.arch .sf { background: var(--mist); border: 0; }
+.arch .platform { background: #fff; border: 1px solid #c8ceda; }
+.arch .platform > h3 { position: absolute; left: 20px; top: 14px; font-size: 19px; font-weight: 700; }
+.arch .tile { position: absolute; border-radius: 10px; background: var(--mist); padding: 10px 16px; font-size: 17px; font-weight: 600; display: flex; flex-direction: column; justify-content: center; line-height: 1.25; }
+.arch .platform .tile { background: var(--mist); }
+.arch .tile small { font-weight: 400; font-size: 14.5px; color: var(--muted); margin-top: 3px; }
+.arch .tile.engine { background: var(--yellow-soft); border: 3px solid var(--gold); }
+.arch .tile.engine b { font-size: 22px; }
+.arch svg { position: absolute; inset: 0; width: 1600px; height: 900px; pointer-events: none; }
+.arch .legend { position: absolute; left: 80px; top: 812px; display: flex; gap: 30px; font-size: 16px; align-items: center; }
+.arch .legend span { display: inline-flex; align-items: center; gap: 8px; }
+.badge { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-weight: 700; font-size: 14px; flex: none; }
+.badge.out { background: var(--blue); color: #fff; }
+.badge.back { background: var(--yellow); color: var(--navy); box-shadow: inset 0 0 0 2px var(--gold); }
+
+/* ---------- 5 compare ---------- */
+.compare { margin-top: 40px; width: 1440px; border-collapse: collapse; font-size: 17.5px; line-height: 1.4; }
+.compare th, .compare td { text-align: left; vertical-align: top; padding: 14px 20px 14px 0; border-top: 1px solid var(--line); }
+.compare thead th { border-top: 0; padding-bottom: 18px; font-size: 24px; font-weight: 600; vertical-align: bottom; }
+.compare thead th small { display: block; font-size: 16px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+.compare thead .badge { margin-right: 6px; vertical-align: 3px; }
+.compare tbody th { width: 210px; font-weight: 600; color: var(--muted); }
+.compare td { width: 410px; }
+
+/* ---------- 6 sequences ---------- */
+.seqs { margin-top: 36px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; width: 1440px; }
+.seq h3 { font-size: 26px; font-weight: 600; }
+.seq > p { color: var(--muted); font-size: 18px; margin-top: 6px; line-height: 1.45; }
+.seq ol { margin-top: 20px; display: grid; gap: 12px; }
+.seq li { display: grid; grid-template-columns: 170px 1fr; gap: 16px; align-items: start; padding: 12px 16px; border-radius: 10px; background: var(--mist); font-size: 17px; line-height: 1.4; }
+.seq li.out { background: var(--blue-soft); }
+.seq li.back { background: var(--yellow-soft); }
+.seq .dir { font-weight: 600; font-size: 15px; }
+.seq pre { margin: 6px 0 0; font-family: var(--mono); font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; color: #2b3150; }
+
+/* ---------- goals ---------- */
+.goals { margin-top: 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 72px; width: 1440px; }
+.goals li { padding: 30px 0 34px; border-top: 4px solid var(--navy); }
+.goals li:nth-child(n+3) { border-top-width: 1px; border-top-color: var(--line); }
+.goals h3 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.15; }
+.goals p { font-size: 19px; color: var(--muted); line-height: 1.5; margin-top: 10px; max-width: 600px; }
+
+/* ---------- prepared ---------- */
+.prep { margin-top: 40px; display: grid; grid-template-columns: 1fr 440px; gap: 56px; width: 1440px; }
+.prep h3 { font-size: 26px; font-weight: 600; }
+.prep-lede { font-size: 18px; color: var(--muted); margin-top: 6px; }
+.prep-design { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px 36px; }
+.prep-design li { border-left: 4px solid var(--blue); padding-left: 16px; }
+.prep-design b { display: block; font-size: 19px; font-weight: 600; }
+.prep-design span { display: block; font-size: 16.5px; color: var(--muted); line-height: 1.45; margin-top: 4px; }
+.opt { display: inline-block; margin-left: 8px; font-style: normal; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid #c8ceda; border-radius: 99px; padding: 1px 9px; vertical-align: 2px; white-space: nowrap; }
+.prep-side { display: grid; gap: 22px; align-content: start; }
+.prep-side > div { background: var(--mist); border-radius: 16px; padding: 22px 26px; }
+.prep-side h3 { font-size: 21px; }
+.prep-side ul { margin-top: 10px; display: grid; gap: 8px; }
+.prep-side li { font-size: 17px; line-height: 1.4; padding-left: 18px; position: relative; }
+.prep-side li::before { content: ''; position: absolute; left: 0; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--navy); }
+
+/* ---------- discovery ---------- */
+.disc { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr 400px; gap: 48px; width: 1440px; }
+.disc h3 { font-size: 23px; font-weight: 600; padding-bottom: 12px; border-bottom: 4px solid var(--navy); }
+.disc ul, .disc ol { margin-top: 6px; }
+.disc li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.disc b { display: block; font-size: 18.5px; font-weight: 600; }
+.disc span { display: block; font-size: 16.5px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
+.disc .phase { background: var(--yellow-soft); border-radius: 16px; padding: 22px 26px; }
+.disc .phase h3 { border-bottom-color: var(--gold); }
+.disc .phase ol { counter-reset: ph; }
+.disc .phase li { counter-increment: ph; display: grid; grid-template-columns: 34px 1fr; border-bottom-color: #efe2a0; }
+.disc .phase li::before { content: counter(ph); font-family: var(--serif); font-size: 28px; color: var(--gold); line-height: 1; grid-row: span 2; }
+.disc .phase > p { margin-top: 16px; font-family: var(--serif); font-size: 19px; line-height: 1.4; }
+
+/* ---------- event to DE ---------- */
+.eflow { margin-top: 34px; width: 1440px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.eflow li { position: relative; padding: 18px 44px 18px 22px; border-radius: 14px; margin-right: 26px; font-size: 16.5px; line-height: 1.4; }
+.eflow li:not(:last-child)::after { content: ''; position: absolute; right: -22px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-top: 3px solid var(--navy); border-right: 3px solid var(--navy); transform: rotate(45deg); }
+.eflow b { display: block; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.eflow span { color: #3b4060; }
+.eflow .e-model { background: var(--yellow-soft); box-shadow: inset 0 0 0 2px var(--gold); }
+.eflow .e-event { background: var(--yellow-soft); }
+.eflow .e-de { background: var(--blue-soft); box-shadow: inset 0 0 0 2px var(--blue); }
+.eflow .e-journey { background: var(--mist); margin-right: 0; }
+.tdef { margin-top: 26px; width: 1440px; display: grid; grid-template-columns: 1fr 440px; gap: 40px; }
+.tdef-table { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.tdef-head { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 18px; background: var(--mist); font-size: 16px; }
+.tdef-head b { font-weight: 600; font-size: 18px; }
+.tdef-head span { color: var(--muted); font-size: 15px; }
+.tdef table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+.tdef th { text-align: left; font-weight: 600; color: var(--muted); font-size: 13.5px; padding: 8px 18px 4px; }
+.tdef td { padding: 6px 18px; border-top: 1px solid var(--line); line-height: 1.3; }
+.tdef td:nth-child(2) { color: var(--muted); white-space: nowrap; }
+.tdef td:nth-child(3) { color: var(--gold); font-weight: 600; white-space: nowrap; }
+.callout { position: relative; background: var(--yellow); border-radius: 18px; padding: 28px 30px; align-self: start; }
+.callout .owner { margin-left: 0; background: var(--navy); color: #fff; }
+.callout h3 { margin-top: 14px; font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.1; }
+.callout ul { margin-top: 16px; display: grid; gap: 10px; }
+.callout li { font-size: 17.5px; line-height: 1.4; padding-left: 18px; position: relative; }
+.callout li::before { content: ''; position: absolute; left: 0; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--navy); }
+
+/* ---------- tradeoffs ---------- */
+.tradeoffs { margin-top: 18px; width: 1440px; display: grid; grid-template-columns: 210px 410px 410px 410px; background: var(--mist); border-radius: 14px; padding: 18px 0; }
+.tradeoffs .t-label { padding-left: 20px; font-weight: 600; font-size: 17.5px; }
+.tradeoffs > div { padding-right: 20px; display: grid; gap: 8px; align-content: start; }
+.tradeoffs p { font-size: 16.5px; line-height: 1.4; padding-left: 24px; position: relative; }
+.tradeoffs p::before { position: absolute; left: 0; top: -1px; font-weight: 700; font-size: 18px; }
+.tradeoffs .plus::before { content: '+'; color: var(--send); }
+.tradeoffs .minus::before { content: '\2212'; color: var(--abstain); }
+
+/* ---------- scale ---------- */
+.scale3 { margin-top: 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; width: 1440px; }
+.scale3 svg { width: 100%; height: auto; background: var(--mist); border-radius: 14px; padding: 14px 10px; }
+.scale3 h3 { margin-top: 18px; font-size: 22px; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+.scale3 .opt-line { margin-top: 16px; font-size: 14.5px; font-weight: 600; color: var(--muted); }
+.scale3 .opt-line.rec { color: var(--send); }
+.scale3 h3.after-opt { margin-top: 4px; }
+.scale3 p { margin-top: 8px; font-size: 17.5px; color: var(--muted); line-height: 1.5; }
+.levers { margin-top: 30px; width: 1440px; display: grid; grid-template-columns: 210px 1fr; align-items: start; }
+.levers h3 { font-size: 19px; font-weight: 600; }
+.levers ul { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.levers li { font-size: 17px; line-height: 1.4; border-top: 3px solid var(--blue); padding-top: 10px; }
+.pov { margin-top: 26px; width: 1440px; background: var(--navy); color: #fff; border-radius: 16px; padding: 20px 26px; font-family: var(--serif); font-size: 23px; line-height: 1.35; }
+
+/* ---------- 8 engagement back ---------- */
+.paths { margin-top: 36px; width: 1440px; display: grid; gap: 0; }
+.path { display: grid; grid-template-columns: 1fr 210px 210px 230px; gap: 28px; padding: 20px 0; border-top: 1px solid var(--line); align-items: start; }
+.path.head { border-top: 0; padding: 0 0 10px; font-size: 15px; color: var(--muted); font-weight: 600; }
+.path h3 { font-size: 22px; font-weight: 600; }
+.path p { font-size: 17px; color: var(--muted); line-height: 1.45; margin-top: 4px; }
+.path > span { font-size: 17px; line-height: 1.4; }
+.path .proof { display: inline-block; margin-top: 8px; font-size: 15px; color: var(--send); font-weight: 600; }
+.holdout { margin-top: 22px; width: 1440px; display: flex; gap: 18px; align-items: center; background: var(--yellow-soft); border-radius: 12px; padding: 16px 22px; font-size: 18px; line-height: 1.45; }
+
+/* ---------- 9 journey mock ---------- */
+#s-journey > h2 { font-size: 44px; }
+#s-journey > .lede { font-size: 19px; margin-top: 8px; }
+.jb { position: absolute; left: 80px; top: 200px; width: 1100px; height: 450px; border-radius: 16px; border: 1px solid var(--line);
+  background-color: #f6f8fb; background-image: radial-gradient(#d3d8e2 1.2px, transparent 1.2px); background-size: 22px 22px; }
+.jb-bar { position: absolute; left: 0; right: 0; top: 0; height: 44px; border-bottom: 1px solid var(--line); background: #fff; border-radius: 16px 16px 0 0; display: flex; align-items: center; gap: 12px; padding: 0 18px; font-size: 15px; }
+.jb-bar b { font-weight: 600; }
+.jb-bar .pill { margin-left: auto; font-size: 13px; color: var(--send); background: #e5f3ec; border-radius: 99px; padding: 3px 10px; font-weight: 600; }
+.node { position: absolute; width: 132px; margin-left: -66px; text-align: center; font-size: 14.5px; line-height: 1.25; }
+.node .ic { width: 62px; height: 62px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 2px solid #b9c0ce; transition: box-shadow 0.25s, border-color 0.25s; }
+.node .ic svg { width: 28px; height: 28px; }
+.node.entry .ic { background: #e5f3ec; border-color: var(--send); color: var(--send); }
+.node.ca .ic { background: var(--blue-soft); border-color: var(--blue); color: var(--blue); }
+.node.wait .ic { color: #5f6378; }
+.node.split .ic { background: #fff4e0; border-color: #c27a00; color: #c27a00; border-radius: 14px; transform: rotate(45deg); }
+.node.split .ic svg { transform: rotate(-45deg); }
+.node.email .ic { color: var(--navy); }
+.node.lit .ic { box-shadow: 0 0 0 6px rgba(21, 104, 227, 0.18); }
+.node b { font-weight: 600; display: block; }
+.node small { color: var(--muted); }
+.jb svg.wires { position: absolute; inset: 0; width: 1100px; height: 450px; pointer-events: none; }
+.wires path { fill: none; stroke: #9aa3b5; stroke-width: 2.5; transition: stroke 0.25s, stroke-width 0.25s; }
+.wires path.on { stroke: var(--navy); stroke-width: 4; }
+.wires text { font: 600 13px var(--sans); fill: var(--muted); }
+.token { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 700; font-size: 15px; display: grid; place-items: center;
+  border: 3px solid #fff; box-shadow: 0 2px 6px rgba(25, 30, 59, 0.35); transition: left 0.6s ease, top 0.6s ease, opacity 0.3s; z-index: 2; }
+.token.hidden { opacity: 0; }
+
+.engine { position: absolute; left: 1220px; top: 200px; width: 300px; height: 168px; border-radius: 16px; background: var(--yellow-soft); border: 3px solid var(--gold); padding: 18px 20px; }
+.engine h3 { font-size: 19px; font-weight: 700; }
+.engine p { font-size: 14.5px; color: var(--muted); margin-top: 2px; }
+.engine .state { margin-top: 14px; font-size: 16.5px; font-weight: 600; line-height: 1.35; min-height: 46px; }
+.overlay { position: absolute; inset: 0; width: 1600px; height: 900px; pointer-events: none; }
+.overlay path { fill: none; stroke-width: 4; stroke-linecap: round; opacity: 0.22; transition: opacity 0.3s; }
+.overlay path.call { stroke: var(--blue); }
+.overlay path.back { stroke: var(--gold); }
+.overlay path.read { stroke: var(--navy); stroke-dasharray: 2 9; }
+.overlay path.on { opacity: 1; }
+.overlay path.on.flow { stroke-dasharray: 14 10; animation: flow 0.9s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) { .token, .node .ic, .wires path, .overlay path { transition: none; } .overlay path.on.flow { animation: none; } }
+
+.side { position: absolute; left: 1220px; top: 392px; width: 300px; }
+.scen { display: grid; gap: 8px; }
+.scen button { text-align: left; border: 1px solid #c8ceda; background: #fff; border-radius: 10px; padding: 10px 14px; font-size: 15.5px; line-height: 1.3; }
+.scen button[aria-pressed=true] { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
+.scen button small { display: block; color: var(--muted); font-size: 13.5px; }
+.stepper { margin-top: 16px; display: flex; gap: 10px; align-items: center; }
+.btn { border: 0; border-radius: 99px; background: var(--blue); color: #fff; font-weight: 600; font-size: 16px; padding: 11px 22px; }
+.btn.ghost { background: transparent; color: var(--blue); padding: 11px 8px; }
+.btn:disabled { background: #9db7e4; cursor: default; }
+.stepcount { margin-left: auto; font-size: 14px; color: var(--muted); }
+
+.caption { position: absolute; left: 80px; top: 666px; width: 1100px; display: grid; grid-template-columns: 1fr; }
+.de { position: absolute; left: 80px; top: 700px; width: 1100px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.de-head { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 18px; background: var(--mist); font-size: 15px; }
+.de-head b { font-weight: 600; }
+.de-head span { color: var(--muted); }
+.de table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.de th { text-align: left; font-weight: 600; color: var(--muted); padding: 8px 18px 4px; font-size: 13.5px; }
+.de td { padding: 4px 18px 12px; font-family: var(--mono); font-size: 13.5px; word-break: break-all; transition: background 0.4s; }
+.de tr.filled td { background: var(--yellow-soft); }
+.say { position: absolute; left: 1220px; top: 676px; width: 300px; font-size: 17px; line-height: 1.45; min-height: 150px; }
+.say b { display: block; font-size: 19px; margin-bottom: 4px; }
+
+/* ---------- 10 sandbox ---------- */
+.sandbox { margin-top: 32px; display: grid; grid-template-columns: 780px 1fr; gap: 56px; width: 1440px; }
+.shot { height: 640px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 18px 40px -24px rgba(25, 30, 59, 0.45); }
+.shot img { width: 100%; display: block; }
+.built { display: grid; gap: 18px; align-content: start; }
+.built li { display: grid; grid-template-columns: 22px 1fr; gap: 14px; font-size: 18px; line-height: 1.45; }
+.built li::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--send); margin-top: 8px; }
+.built li.pending::before { background: transparent; border: 2px solid #c27a00; }
+.built b { font-weight: 600; }
+.built span { display: block; color: var(--muted); font-size: 16px; }
+
+/* ---------- 11 where decisioning ---------- */
+.lanes { margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; width: 1440px; border-radius: 16px; overflow: hidden; }
+.lane { padding: 24px 28px 28px; min-height: 420px; }
+.lane:nth-child(1) { background: var(--mist); }
+.lane:nth-child(2) { background: var(--blue-soft); }
+.lane:nth-child(3) { background: var(--yellow-soft); }
+.lane h3 { font-size: 26px; font-weight: 600; }
+.lane > p { font-size: 17px; color: var(--muted); margin-top: 6px; line-height: 1.4; min-height: 48px; }
+.lane ul { margin-top: 18px; display: grid; gap: 10px; }
+.lane li { background: #fff; border-radius: 8px; padding: 11px 14px; font-size: 17.5px; line-height: 1.3; }
+.lane li small { display: block; color: var(--muted); font-size: 14.5px; }
+.prompts { margin-top: 26px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; width: 1440px; }
+.prompts p { font-family: var(--serif); font-size: 21px; line-height: 1.35; border-left: 4px solid var(--blue); padding-left: 16px; }
+
+/* ---------- 12 next ---------- */
+.next { margin-top: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px; width: 1440px; }
+.next li { padding: 22px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 150px; gap: 20px; align-items: baseline; }
+.next h3 { font-size: 23px; font-weight: 600; line-height: 1.3; }
+.next p { font-size: 17px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+.next .who { font-size: 16px; color: var(--muted); text-align: right; }
+
+/* ---------- print: one slide per page ---------- */
+@media print {
+  @page { size: 1600px 900px; margin: 0; }
+  html, body { overflow: visible; background: #fff; height: auto; }
+  .stage { position: static; transform: none !important; }
+  .slide { display: block !important; position: relative; page-break-after: always; break-after: page; width: 1600px; height: 900px; }
+  .controls, .progress { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main class="stage" id="stage">
+
+<!-- 1 ---------------------------------------------------------------- -->
+<section class="slide" id="s-title" aria-label="Title">
+  <img class="logo" src="__LOGO__" alt="Expedia">
+  <h1>Knowing when to send, and when to hold</h1>
+  <p class="sub">Working session on decisioning between Expedia's model and Salesforce Marketing Cloud, in batch and in real time</p>
+  <p class="who">Expedia and Salesforce</p>
+  <div class="verdicts" aria-hidden="true">
+    <div class="verdict"><span class="score abstain">0.79</span><b>Abstain: hold Sam for 52 hours</b><small>Six sends this week, opens down to 12%, visited the unsubscribe page twice</small></div>
+    <div class="verdict light"><span class="score send" style="color:#fff">0.30</span><b>Send: Priya's trip is in 9 days</b><small>Platinum member, pre-trip messages stay relevant</small></div>
+  </div>
+</section>
+
+<!-- 2 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Agenda">
+  <h2>Agenda</h2>
+  <ol class="agenda">
+    <li><b>Goals and context setting</b><span>What we each want from today, what we heard, what we've prepared</span></li>
+    <li><b>Whiteboarding and model and business discovery</b><span>What the model returns, what it needs, and which journeys need a decision</span></li>
+    <li><b>Scale discussion</b><span>Eventing to a data extension, plus optional sync and async for journey context</span></li>
+    <li><b>Demo and solution overview</b><span>Optional, for context: the prototype and a mock journey</span></li>
+    <li><b>Technical deep dive</b><span>Payloads, write-back, and engagement flowing back to the model</span></li>
+    <li><b>Table definition <em class="owner">Wes</em></b><span>The predictions data extension: fields, keys, and how the model events into it</span></li>
+  </ol>
+  <div class="foot"><img src="__LOGO__" alt=""></div>
+</section>
+
+<!-- 3 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Salesforce's goals">
+  <h2>Salesforce's goals for today</h2>
+  <p class="lede">We're here to learn as much as to share. By the end of the session we'd like to have done four things.</p>
+  <ul class="goals">
+    <li><h3>Learn more about the model's outputs and phasing</h3><p>What the decision engine returns today, what's planned next, and the order it rolls out in</p></li>
+    <li><h3>Walk through architectural patterns for scale</h3><p>Share how batch, sync, and async decisioning behave in Marketing Cloud, so Expedia Group can choose with the full picture</p></li>
+    <li><h3>Define model outputs and data inputs</h3><p>Agree what the model sends to Salesforce, and what engagement and profile data it needs back</p></li>
+    <li><h3>Leave Expedia Group confident to architect this for scale</h3><p>A clear pattern for each journey type, and a path to a first pilot</p></li>
+  </ul>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Goals and context</span></div>
+</section>
+
+<!-- 4 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="What we heard">
+  <h2>What we heard last time</h2>
+  <p class="lede">Expedia's decision engine already lives in AWS. Marketing Cloud needs its answer at the moment it decides whether to message a traveler.</p>
+  <div class="needs">
+    <div class="need"><h3>Get scores in at batch scale</h3><p>Score every traveler on a schedule and have the answer waiting in Salesforce before the send.</p><q>How to pull in batch? Iceberg on S3</q></div>
+    <div class="need"><h3>Ask the model in real time</h3><p>For triggered moments, call Expedia's API from inside a journey and act on the answer.</p><q>How to call real time to their API?</q></div>
+    <div class="need"><h3>Hold up at peak volume</h3><p>Triggered and transactional journeys have to keep moving when large audiences enter at once.</p><q>Action item: increase slot workers</q></div>
+    <div class="need wide"><h3>Close the loop</h3><p>Opens, clicks, and what happened after a hold have to flow back so the model learns from its own decisions.</p></div>
+    <div class="need"><h3>Avoid copying data</h3><p>Use zero copy to enrich traveler profiles without building another pipeline.</p><q>Zero copy, enriching datasets</q></div>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Goals and context</span></div>
+</section>
+
+<!-- 5 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="What we've prepared">
+  <h2>What we've prepared</h2>
+  <div class="prep">
+    <div class="prep-main">
+      <h3>A working prototype</h3>
+      <p class="prep-lede">Built end to end in our sandbox, so we can talk about real behavior instead of slides.</p>
+      <ul class="prep-design">
+        <li><b>Journey design</b><span>An API event entry, a real-time decision split, and an async callout on each branch, published in an Expedia business unit</span></li>
+        <li><b>Two custom activities <em class="opt">Optional, for journey context</em></b><span>A sync split that branches on the model's answer, and an async request that acknowledges in milliseconds and answers later</span></li>
+        <li><b>A stand-in decision engine on AWS</b><span>Returns send or abstain, a saturation score, reason codes, and a recommended hold. Verifies Marketing Cloud's signature on every call.</span></li>
+        <li><b>The model events out to a data extension</b><span>Each new score lands in a data extension the journey reads as contact data, by REST upsert or a file import from S3</span></li>
+        <li><b>Batch scores without copying data</b><span>An Iceberg-readable table that Data 360 reads in place with zero copy, plus a log of every decision</span></li>
+        <li><b>A console to watch it run</b><span>Send a traveler into the journey and follow each call and where the answer ends up</span></li>
+      </ul>
+    </div>
+    <div class="prep-side">
+      <div><h3>Documentation</h3><ul><li>Reference architecture for batch and real-time decisioning</li><li>Custom activity contract, with sample requests and responses</li><li>Setup notes for Marketing Cloud, Data 360, and Databricks</li></ul></div>
+      <div><h3>For the whiteboard</h3><ul><li>A mock journey that steps through the async callout</li><li>A starting sort of which journeys need a decision</li><li>Discovery questions on model outputs, inputs, and phasing</li></ul></div>
+    </div>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Goals and context</span></div>
+</section>
+
+<!-- 6 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Model and business discovery">
+  <h2>What the model returns, and what it needs</h2>
+  <p class="lede">The questions we'd like to answer together. Our prototype's choices are a starting point, not a proposal.</p>
+  <div class="disc">
+    <div class="disc-col">
+      <h3>Outputs: what the model returns</h3>
+      <ul>
+        <li><b>The decision</b><span>Send or abstain. Or something richer, such as delay, switch channel, or reduce frequency?</span></li>
+        <li><b>A score and reasons</b><span>Do marketers need to see why, for reporting and trust?</span></li>
+        <li><b>How long to hold</b><span>A fixed rule, or a recommendation per traveler?</span></li>
+        <li><b>How fresh it is</b><span>Is a daily score good enough, or does the last hour matter?</span></li>
+      </ul>
+    </div>
+    <div class="disc-col">
+      <h3>Inputs: what the model needs</h3>
+      <ul>
+        <li><b>Marketing engagement</b><span>Sends, opens, clicks, and unsubscribes across email and app</span></li>
+        <li><b>Trips and bookings</b><span>Upcoming travel, recent searches, and booking history across brands</span></li>
+        <li><b>Loyalty and preferences</b><span>One Key tier, consent, and stated contact preferences</span></li>
+        <li><b>What happened after a hold</b><span>Did holding a message change what the traveler did next?</span></li>
+      </ul>
+    </div>
+    <div class="disc-col phase">
+      <h3>Phasing</h3>
+      <ol>
+        <li><b>Start with batch</b><span>Daily scores for promotional journeys</span></li>
+        <li><b>Add real time where it matters</b><span>Async decisions for triggered journeys</span></li>
+        <li><b>Close the loop</b><span>Engagement and holdout results feeding retraining</span></li>
+      </ol>
+      <p>What's Expedia Group's current plan, and where is the model today?</p>
+    </div>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Whiteboarding and discovery</span></div>
+</section>
+
+<!-- 7 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Where decisioning is needed">
+  <h2>Which journeys need a decision?</h2>
+  <p class="lede">A starting sort to argue with. Move cards between columns on the whiteboard.</p>
+  <div class="lanes">
+    <div class="lane"><h3>Always send</h3><p>The traveler needs this message. Never suppress it.</p>
+      <ul><li>Booking confirmation</li><li>Itinerary and schedule changes</li><li>Check-in and travel documents</li><li>Receipts, refunds, account security</li></ul></div>
+    <div class="lane"><h3>Decide from a batch score</h3><p>Planned sends where yesterday's score is good enough.</p>
+      <ul><li>Deals and newsletters</li><li>Seasonal trip inspiration</li><li>One Key points and tier updates<small>Marketing versions only</small></li><li>Cross-sell after booking<small>Car, activities, insurance</small></li></ul></div>
+    <div class="lane"><h3>Decide in real time</h3><p>Triggered moments where the last hour changes the answer.</p>
+      <ul><li>Abandoned search or checkout</li><li>Price drop alerts</li><li>Pre-trip upsell window</li><li>Win-back after a lapse</li></ul></div>
+  </div>
+  <div class="prompts">
+    <p>Does an abstain suppress the send, delay it, or switch the channel?</p>
+    <p>Do transactional sends count toward a traveler's saturation?</p>
+    <p>What should the default path do when the model doesn't answer?</p>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Whiteboarding and discovery</span></div>
+</section>
+
+<!-- new ------------------------------------------------------------ -->
+<section class="slide" aria-label="The model events out to a data extension">
+  <h2>The model events its answer out to a data extension</h2>
+  <p class="lede">The recommended pathway. Journeys never call the model. They read the latest score as contact data.</p>
+  <ol class="eflow">
+    <li class="e-model"><b>Decision engine</b><span>Scores a traveler whenever their behavior changes, or on a schedule</span></li>
+    <li class="e-event"><b>Event out</b><span>REST upsert for each change, or a bulk file to S3 that an import loads</span></li>
+    <li class="e-de"><b>Data extension</b><span><code>Expedia_Saturation_Predictions</code>, one row per traveler, exposed as contact data</span></li>
+    <li class="e-journey"><b>Journey decision split</b><span>Reads the row: send, hold, or a default when there's no score</span></li>
+  </ol>
+  <div class="tdef">
+    <div class="tdef-table">
+      <div class="tdef-head"><b>Table definition</b><span>As built in the prototype, a starting point</span></div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th></th><th>What it's for</th></tr></thead>
+        <tbody>
+        <tr><td><code>SubscriberKey</code></td><td>Text(50)</td><td>Primary key</td><td>The traveler. Matches the contact key in Marketing Cloud</td></tr>
+        <tr><td><code>Prediction</code></td><td>Text(10)</td><td></td><td>send or abstain. What the decision split reads</td></tr>
+        <tr><td><code>SaturationScore</code></td><td>Decimal(6,3)</td><td></td><td>0 to 1. Higher means closer to saturated</td></tr>
+        <tr><td><code>RecommendedHoldHours</code></td><td>Number</td><td></td><td>How long to hold when abstaining</td></tr>
+        <tr><td><code>ReasonCodes</code></td><td>Text(255)</td><td></td><td>Why, for reporting and trust</td></tr>
+        <tr><td><code>ModelVersion</code></td><td>Text(50)</td><td></td><td>Which model made the call</td></tr>
+        <tr><td><code>ScoringMode</code></td><td>Text(20)</td><td></td><td>batch, event, sync, or async</td></tr>
+        <tr><td><code>ScoredAt</code></td><td>Text(40)</td><td></td><td>When the score was made, to judge freshness</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="callout">
+      <span class="owner">Wes</span>
+      <h3>Wes to talk table definition</h3>
+      <ul>
+        <li>Which fields the model sends, and which the journey reads</li>
+        <li>Keys: one row per traveler, or per traveler and brand?</li>
+        <li>How often rows change, and whether history is kept</li>
+        <li>What a missing or stale score should mean</li>
+      </ul>
+    </aside>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Table definition</span></div>
+</section>
+
+<!-- 8 ---------------------------------------------------------------- -->
+<section class="slide" id="s-arch" aria-label="Proposed architecture">
+  <h2>Proposed architecture</h2>
+  <div class="arch">
+    <div class="box container" style="left:80px;top:190px;width:330px;height:600px"><h3>Expedia on AWS</h3></div>
+    <div class="tile" style="left:100px;top:250px;width:290px;height:110px">Traveler and booking data<small>BEX, Vrbo, Hotels.com, One Key</small></div>
+    <div class="tile" style="left:100px;top:380px;width:290px;height:110px">Lakehouse<small>Iceberg tables on S3</small></div>
+    <div class="tile engine" style="left:100px;top:560px;width:290px;height:210px"><b>Decision engine</b><small>Saturation model decides send or hold, and for how long</small></div>
+
+    <div class="box container sf" style="left:470px;top:190px;width:730px;height:600px"><h3>Salesforce</h3></div>
+    <div class="box platform" style="left:490px;top:240px;width:330px;height:430px"><h3>Data 360</h3></div>
+    <div class="tile" style="left:510px;top:300px;width:290px;height:62px">Zero copy federation</div>
+    <div class="tile" style="left:510px;top:374px;width:290px;height:62px">Calculated insights</div>
+    <div class="tile" style="left:510px;top:448px;width:290px;height:62px">Segments</div>
+    <div class="tile" style="left:510px;top:522px;width:290px;height:62px">Activation to Marketing Cloud</div>
+    <div class="tile" style="left:510px;top:596px;width:290px;height:62px">Data share out</div>
+    <div class="box platform" style="left:850px;top:240px;width:330px;height:430px"><h3>Marketing Cloud Engagement</h3></div>
+    <div class="tile" style="left:870px;top:300px;width:290px;height:62px">Journeys</div>
+    <div class="tile" style="left:870px;top:374px;width:290px;height:62px">Sends and content</div>
+    <div class="tile" style="left:870px;top:448px;width:290px;height:62px">Custom activities</div>
+    <div class="tile" style="left:870px;top:522px;width:290px;height:62px">Contact data</div>
+    <div class="tile" style="left:870px;top:596px;width:290px;height:62px">Engagement: opens, clicks</div>
+
+    <div class="box container" style="left:1260px;top:190px;width:260px;height:600px"><h3>Traveler experience</h3></div>
+    <div class="tile" style="left:1280px;top:250px;width:220px;height:110px">Email</div>
+    <div class="tile" style="left:1280px;top:380px;width:220px;height:110px">App push</div>
+    <div class="tile" style="left:1280px;top:510px;width:220px;height:110px">Paid media audiences</div>
+    <div class="tile" style="left:1280px;top:640px;width:220px;height:110px">Sites<small>BEX, Vrbo, Hotels.com</small></div>
+
+    <svg viewBox="0 0 1600 900" aria-hidden="true">
+      <defs>
+        <marker id="ah-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1568e3"/></marker>
+        <marker id="ah-gold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#a88200"/></marker>
+        <marker id="ah-navy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5f6378"/></marker>
+      </defs>
+      <g fill="none" stroke-width="4" stroke-linejoin="round">
+        <path d="M245 362V378" stroke="#5f6378" stroke-width="3" marker-end="url(#ah-navy)"/>
+        <path d="M245 494V556" stroke="#5f6378" stroke-width="3" marker-start="url(#ah-navy)" marker-end="url(#ah-navy)"/>
+        <path d="M392 420H460V331H506" stroke="#a88200" marker-end="url(#ah-gold)"/>
+        <path d="M802 553H866" stroke="#a88200" marker-end="url(#ah-gold)"/>
+        <path d="M1162 479H1215V740H394" stroke="#1568e3" marker-end="url(#ah-blue)"/>
+        <path d="M392 700H1190V553H1164" stroke="#a88200" marker-end="url(#ah-gold)"/>
+        <path d="M868 627H806" stroke="#1568e3" marker-end="url(#ah-blue)"/>
+        <path d="M508 627H430V465H394" stroke="#1568e3" marker-end="url(#ah-blue)"/>
+        <path d="M1162 405H1276" stroke="#5f6378" stroke-width="3" marker-end="url(#ah-navy)"/>
+      </g>
+      <g font-family="Figtree, Arial, sans-serif" font-weight="700" font-size="15" text-anchor="middle">
+        <circle cx="460" cy="376" r="15" fill="#fddb32" stroke="#a88200" stroke-width="2"/><text x="460" y="381" fill="#191e3b">A</text>
+        <circle cx="700" cy="740" r="15" fill="#1568e3"/><text x="700" y="745" fill="#fff">B</text>
+        <circle cx="1000" cy="700" r="15" fill="#fddb32" stroke="#a88200" stroke-width="2"/><text x="1000" y="705" fill="#191e3b">C</text>
+        <circle cx="836" cy="627" r="15" fill="#1568e3"/><text x="836" y="632" fill="#fff">D</text>
+      </g>
+      <text x="245" y="527" font-family="Figtree, Arial, sans-serif" font-size="13" fill="#5f6378" dx="14">features in, scores out</text>
+    </svg>
+    <div class="legend">
+      <span><i class="badge back">A</i>Batch scores, read in place by zero copy</span>
+      <span><i class="badge out">B</i>Journey calls the model (optional)</span>
+      <span><i class="badge back">C</i>Model events its answer to a data extension</span>
+      <span><i class="badge out">D</i>Engagement flows back to the model</span>
+    </div>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Blue: Salesforce calls Expedia. Yellow: Expedia writes to Salesforce.</span><span>Scale discussion</span></div>
+</section>
+
+<!-- 9 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Batch, sync, and async">
+  <h2>Three ways a decision can reach a journey</h2>
+  <table class="compare">
+    <thead><tr><th></th>
+      <th><i class="badge back">C</i>Event to a data extension<small>Recommended. The answer is waiting before the send.</small></th>
+      <th><i class="badge out">B</i>Sync <em class="opt">Optional, for journey context</em><small>The journey waits for the answer</small></th>
+      <th><i class="badge out">B</i><i class="badge back">C</i>Async <em class="opt">Optional, for journey context</em><small>The journey asks, moves on, reads it later</small></th></tr></thead>
+    <tbody>
+      <tr><th>How it works</th><td>The model events each new score to a data extension. The journey reads it as contact data.</td><td>A decision split calls the model and holds each traveler until it answers</td><td>A custom activity sends the request. The model writes its answer to contact data.</td></tr>
+      <tr><th>Freshness</th><td>As of the model's last event</td><td>Up to the moment</td><td>Within minutes</td></tr>
+      <tr><th>If the model is down</th><td>The last known score still applies</td><td>The call times out and the traveler takes a default path</td><td>No answer lands, so the split takes the default path</td></tr>
+      <tr><th>Best for</th><td>Most journeys: promotional, triggered, and lifecycle sends</td><td>A few high-value moments where the latest signal changes the answer</td><td>Journeys that need a decision made in context, at volume</td></tr>
+    </tbody>
+  </table>
+  <div class="tradeoffs">
+    <span class="t-label">Tradeoffs</span>
+    <div><p class="plus">No load on the model at send time, and it scales with the audience</p><p class="minus">Only as fresh as the model's last event, with no journey context</p></div>
+    <div><p class="plus">The freshest answer, decided on the spot</p><p class="minus">Every traveler waits on a decision. When thousands enter at once they queue behind the model, so it doesn't scale well.</p></div>
+    <div><p class="plus">Fire and forget. The journey keeps moving and the model works at its own pace.</p><p class="minus">Needs a short wait step, and a default for travelers whose answer hasn't landed</p></div>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Scale discussion</span></div>
+</section>
+
+<!-- 10 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="How each pattern holds up at scale">
+  <h2>How each pattern holds up at scale</h2>
+  <div class="scale3">
+    <div>
+      <svg viewBox="0 0 440 150" aria-hidden="true">
+        <rect x="10" y="20" width="96" height="110" rx="10" fill="#fff6c7" stroke="#a88200" stroke-width="2.5"/>
+        <path d="M24 48h68M24 70h68M24 92h68M24 114h68" stroke="#a88200" stroke-width="2"/>
+        <path d="M110 75H430" stroke="#9aa3b5" stroke-width="3"/>
+        <path d="M58 20V8H300V62" fill="none" stroke="#a88200" stroke-width="2.5" stroke-dasharray="5 6"/>
+        <rect x="286" y="62" width="26" height="26" rx="5" transform="rotate(45 299 75)" fill="#fff4e0" stroke="#c27a00" stroke-width="2.5"/>
+        <circle cx="150" cy="75" r="7" fill="#191e3b"/><circle cx="200" cy="75" r="7" fill="#191e3b"/><circle cx="250" cy="75" r="7" fill="#191e3b"/><circle cx="350" cy="75" r="7" fill="#191e3b"/><circle cx="400" cy="75" r="7" fill="#191e3b"/>
+      </svg>
+      <p class="opt-line rec">Recommended</p>
+      <h3 class="after-opt"><i class="badge back">C</i> Eventing to a data extension scales</h3>
+      <p>The model writes scores on its own schedule. When the journey runs, the answer is already in contact data, so nothing waits on the model.</p>
+    </div>
+    <div>
+      <svg viewBox="0 0 440 150" aria-hidden="true">
+        <path d="M10 75H430" stroke="#9aa3b5" stroke-width="3"/>
+        <circle cx="40" cy="70" r="7" fill="#191e3b"/><circle cx="62" cy="70" r="7" fill="#191e3b"/><circle cx="84" cy="70" r="7" fill="#191e3b"/><circle cx="106" cy="70" r="7" fill="#191e3b"/><circle cx="128" cy="70" r="7" fill="#191e3b"/><circle cx="150" cy="70" r="7" fill="#191e3b"/><circle cx="172" cy="70" r="7" fill="#191e3b"/><circle cx="194" cy="70" r="7" fill="#191e3b"/><circle cx="40" cy="90" r="7" fill="#191e3b"/><circle cx="62" cy="90" r="7" fill="#191e3b"/><circle cx="84" cy="90" r="7" fill="#191e3b"/><circle cx="106" cy="90" r="7" fill="#191e3b"/><circle cx="128" cy="90" r="7" fill="#191e3b"/><circle cx="150" cy="90" r="7" fill="#191e3b"/><circle cx="172" cy="90" r="7" fill="#191e3b"/><circle cx="194" cy="90" r="7" fill="#191e3b"/><circle cx="216" cy="90" r="7" fill="#191e3b"/><circle cx="238" cy="90" r="7" fill="#191e3b"/><circle cx="40" cy="110" r="7" fill="#191e3b"/><circle cx="62" cy="110" r="7" fill="#191e3b"/><circle cx="84" cy="110" r="7" fill="#191e3b"/><circle cx="106" cy="110" r="7" fill="#191e3b"/><circle cx="128" cy="110" r="7" fill="#191e3b"/><circle cx="150" cy="110" r="7" fill="#191e3b"/><circle cx="172" cy="110" r="7" fill="#191e3b"/><circle cx="194" cy="110" r="7" fill="#191e3b"/>
+        <rect x="286" y="62" width="26" height="26" rx="5" transform="rotate(45 299 75)" fill="#fff4e0" stroke="#c27a00" stroke-width="2.5"/>
+        <path d="M299 58V22H392" fill="none" stroke="#1568e3" stroke-width="2.5"/>
+        <rect x="392" y="8" width="40" height="28" rx="6" fill="#fff6c7" stroke="#a88200" stroke-width="2.5"/>
+        <circle cx="380" cy="75" r="7" fill="#191e3b"/>
+      </svg>
+      <p class="opt-line">Optional, for journey context</p>
+      <h3 class="after-opt"><i class="badge out">B</i> Sync makes every traveler wait</h3>
+      <p>Each traveler holds a connection until the model answers. When thousands enter at once, they queue at the split, and one slow response slows the whole journey.</p>
+    </div>
+    <div>
+      <svg viewBox="0 0 440 150" aria-hidden="true">
+        <path d="M10 75H430" stroke="#9aa3b5" stroke-width="3"/>
+        <circle cx="110" cy="75" r="16" fill="#e8f0fd" stroke="#1568e3" stroke-width="2.5"/>
+        <path d="M110 59V22H200" fill="none" stroke="#1568e3" stroke-width="2.5"/>
+        <rect x="200" y="8" width="40" height="28" rx="6" fill="#fff6c7" stroke="#a88200" stroke-width="2.5"/>
+        <path d="M240 22H332V118H310" fill="none" stroke="#a88200" stroke-width="2.5" stroke-dasharray="5 6"/>
+        <rect x="270" y="106" width="40" height="24" rx="5" fill="#fff" stroke="#a88200" stroke-width="2"/>
+        <rect x="336" y="62" width="26" height="26" rx="5" transform="rotate(45 349 75)" fill="#fff4e0" stroke="#c27a00" stroke-width="2.5"/>
+        <circle cx="40" cy="75" r="7" fill="#191e3b"/><circle cx="160" cy="75" r="7" fill="#191e3b"/><circle cx="210" cy="75" r="7" fill="#191e3b"/><circle cx="260" cy="75" r="7" fill="#191e3b"/><circle cx="400" cy="75" r="7" fill="#191e3b"/>
+      </svg>
+      <p class="opt-line">Optional, for journey context</p>
+      <h3 class="after-opt"><i class="badge out">B</i><i class="badge back">C</i> Async keeps the journey moving</h3>
+      <p>The callout is fire and forget. The model answers at its own pace, and the split reads contact data when the traveler gets there.</p>
+    </div>
+  </div>
+  <div class="levers">
+    <h3>Levers we can pull</h3>
+    <ul>
+      <li>Event scores to a data extension wherever a recent answer is good enough</li>
+      <li>Keep sync and async for the few journeys that need context</li>
+      <li>Raise Journey Builder throughput, such as more slot workers, where volume needs it</li>
+      <li>Give every decision a default path for when the model can't answer</li>
+    </ul>
+  </div>
+  <p class="pov">Where we'd start: the model events scores out to a data extension that every journey reads. Sync and async calls stay optional, for journeys that need a decision made in context.</p>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Scale discussion</span></div>
+</section>
+
+<!-- 11 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Running in our sandbox">
+  <h2>The prototype, running in our sandbox</h2>
+  <div class="sandbox">
+    <div class="shot"><img src="__CONSOLE__" alt="Demo console showing Maya Chen scored Send at 0.62, with each call between Marketing Cloud and the model listed in order and the prediction read back from Marketing Cloud and Databricks"></div>
+    <ul class="built">
+      <li><div><b>Published journey in the Expedia business unit</b><span>API event entry, a real-time split, and an async request on each branch</span></div></li>
+      <li><div><b>Model endpoint on AWS</b><span>A stand-in model behind API Gateway and Lambda. It answered the split in 35 ms and checks Marketing Cloud's signature on each call.</span></div></li>
+      <li><div><b>Write-back to contact data, two ways</b><span>REST upsert into the predictions data extension, or an S3 file loaded by a Marketing Cloud import automation</span></div></li>
+      <li><div><b>Batch scores in an Iceberg-readable table</b><span>Delta table in Databricks with Iceberg reads turned on, plus an append-only decision log</span></div></li>
+      <li class="pending"><div><b>Data 360 zero copy</b><span>Connection is active and the data model object is defined. The data stream to the table is the last step.</span></div></li>
+    </ul>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Demo and solution overview, optional</span></div>
+</section>
+
+<!-- 12 ---------------------------------------------------------------- -->
+<section class="slide" id="s-journey" aria-label="Mock journey">
+  <h2>A journey that asks, moves on, and reads the answer</h2>
+  <p class="lede">Step through to see the async callout fill in contact data before the decision split runs.</p>
+
+  <div class="jb" id="jb">
+    <div class="jb-bar"><b>Trip inspiration, saturation-aware</b><span style="color:var(--muted)">Journey Builder</span><span class="pill">Running</span></div>
+    <svg class="wires" viewBox="0 0 1100 450" aria-hidden="true">
+      <path id="w-1" d="M120 220H230"/>
+      <path id="w-2" d="M310 220H410"/>
+      <path id="w-3" d="M490 220H590"/>
+      <path id="w-send" d="M670 220H710V110H810"/>
+      <path id="w-abstain" d="M670 220H810"/>
+      <path id="w-none" d="M670 220H710V340H810"/>
+      <path id="w-send2" d="M890 110H960"/>
+      <path id="w-abstain2" d="M890 220H960"/>
+      <path id="w-none2" d="M890 340H960"/>
+      <text x="722" y="100">Send</text>
+      <text x="722" y="210">Abstain</text>
+      <text x="722" y="330">No score</text>
+    </svg>
+    <div class="node entry" style="left:80px;top:189px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 4v16"/></svg></div><b>API event</b><small>Traveler entry</small></div>
+    <div class="node ca" id="n-ca" style="left:270px;top:189px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></div><b>Saturation request</b><small>Custom activity, async</small></div>
+    <div class="node wait" style="left:450px;top:189px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div><b>Wait 5 minutes</b><small>Time for the answer</small></div>
+    <div class="node split" id="n-split" style="left:630px;top:189px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-7M12 13L6 6M12 13l6-7"/></svg></div><b>Decision split</b><small>Reads contact data</small></div>
+    <div class="node email" id="n-send" style="left:850px;top:79px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4 7l8 6 8-6"/></svg></div><b>Fall getaways email</b></div>
+    <div class="node wait" id="n-abstain" style="left:850px;top:189px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div><b>Hold</b><small>Wait the recommended hours</small></div>
+    <div class="node wait" id="n-none" style="left:850px;top:309px"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h12M6 7h12M6 17h7"/></svg></div><b>Default rule</b><small>Send, hold, or cap</small></div>
+    <div class="node" style="left:1000px;top:79px"><div class="ic" style="width:40px;height:40px;margin-top:11px"><svg viewBox="0 0 24 24" fill="none" stroke="#5f6378" stroke-width="2.2"><path d="M6 21V4h11l-2 4 2 4H6"/></svg></div><small>Exit</small></div>
+    <div class="node" style="left:1000px;top:189px"><div class="ic" style="width:40px;height:40px;margin-top:11px"><svg viewBox="0 0 24 24" fill="none" stroke="#5f6378" stroke-width="2.2"><path d="M6 21V4h11l-2 4 2 4H6"/></svg></div><small>Exit</small></div>
+    <div class="node" style="left:1000px;top:309px"><div class="ic" style="width:40px;height:40px;margin-top:11px"><svg viewBox="0 0 24 24" fill="none" stroke="#5f6378" stroke-width="2.2"><path d="M6 21V4h11l-2 4 2 4H6"/></svg></div><small>Exit</small></div>
+    <div class="token hidden" id="token" aria-hidden="true">SO</div>
+  </div>
+
+  <div class="engine" id="engine">
+    <h3>Expedia decision engine</h3>
+    <p>AWS, outside Marketing Cloud</p>
+    <p class="state" id="engineState">Waiting for requests</p>
+  </div>
+
+  <svg class="overlay" viewBox="0 0 1600 900" aria-hidden="true">
+    <path class="call" id="o-call" d="M350 388V172H1200V250H1218"/>
+    <path class="back" id="o-back" d="M1222 352H1200V780H1184"/>
+    <path class="read" id="o-read" d="M710 500V698"/>
+  </svg>
+
+  <div class="side">
+    <div class="scen" role="group" aria-label="Choose a traveler">
+      <button data-scen="sam" aria-pressed="true">Sam O'Connor<small>Six emails this week, opens falling</small></button>
+      <button data-scen="maya" aria-pressed="false">Priya Nair<small>Platinum, trip in 9 days</small></button>
+      <button data-scen="down" aria-pressed="false">Model doesn't answer<small>Timeout or outage</small></button>
+    </div>
+    <div class="stepper">
+      <button class="btn" id="jNext">Next step</button>
+      <button class="btn ghost" id="jReset">Start over</button>
+      <span class="stepcount" id="jCount">Step 0 of 4</span>
+    </div>
+  </div>
+
+  <div class="de" id="de">
+    <div class="de-head"><b>Contact data: Expedia_Saturation_Predictions</b><span>Data extension, keyed on SubscriberKey</span></div>
+    <table><thead><tr><th>SubscriberKey</th><th>Prediction</th><th>SaturationScore</th><th>ReasonCodes</th><th>RecommendedHoldHours</th><th>ScoredAt</th></tr></thead>
+      <tbody><tr id="deRow"><td id="d-key">EXP-100234</td><td id="d-pred">empty</td><td id="d-score">empty</td><td id="d-reason">empty</td><td id="d-hold">empty</td><td id="d-at">empty</td></tr></tbody></table>
+  </div>
+  <p class="say" id="say" aria-live="polite"><b>Ready</b>Pick a traveler, then press Next step.</p>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Demo and solution overview, optional</span></div>
+</section>
+
+<!-- 13 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Real-time step by step">
+  <h2>Optional: deciding in journey context</h2>
+  <p class="lede">For journeys where the decision depends on the moment. Both run in our sandbox today. Marketing Cloud signs every call with a JWT so the model can verify it came from the journey.</p>
+  <div class="seqs">
+    <div class="seq">
+      <h3>Real-time split</h3>
+      <p>One call. The answer chooses the branch.</p>
+      <ol>
+        <li class="out"><span class="dir">Journey to model</span><div>Traveler reaches the split
+<pre>POST /ca/sync/execute
+{ "contactKey": "EXP-100234" }</pre></div></li>
+        <li class="back"><span class="dir">Model to journey</span><div>Answer inside the timeout (we set 10 s, the target is well under 100 ms)
+<pre>{ "branchResult": "abstain",
+  "saturationScore": 0.785,
+  "reasonCodes": "HIGH_SEND_VOLUME_7D|DECLINING_OPEN_RATE" }</pre></div></li>
+        <li><span class="dir">Journey</span><div>Routes to the Abstain branch. The answer is also saved to contact data for reporting.</div></li>
+      </ol>
+    </div>
+    <div class="seq">
+      <h3>Async callout</h3>
+      <p>The journey never waits on the model.</p>
+      <ol>
+        <li class="out"><span class="dir">Journey to model</span><div>Request, then an immediate acknowledgement
+<pre>POST /ca/async/execute   →  { "status": "accepted" }   5 ms</pre></div></li>
+        <li><span class="dir">Journey</span><div>Traveler moves into a wait step</div></li>
+        <li class="back"><span class="dir">Model to contact data</span><div>Scores in the background, then upserts the row
+<pre>POST /hub/v1/dataevents/key:Expedia_Saturation_Predictions/rowset
+[{ "keys": { "SubscriberKey": "EXP-100234" },
+   "values": { "Prediction": "abstain", "RecommendedHoldHours": 52 } }]</pre></div></li>
+        <li><span class="dir">Journey</span><div>Decision split reads contact data when the wait ends</div></li>
+      </ol>
+    </div>
+  </div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Technical deep dive</span></div>
+</section>
+
+<!-- 14 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Engagement back to the model">
+  <h2>Getting engagement back into the model</h2>
+  <div class="paths">
+    <div class="path head"><span>Pathway</span><span>How fresh</span><span>Detail</span><span>Effort</span></div>
+    <div class="path"><div><h3><i class="badge out">D</i> Data 360 data share</h3><p>Engagement is shared from Data 360 into Expedia's lakehouse as a live, queryable table. No files, no pipeline to run.</p><span class="proof">Working in our sandbox: email engagement queried in Databricks</span></div><span>Minutes, as Data 360 refreshes</span><span>Per send, open, and click, already joined to the traveler profile</span><span>Low. A one-time share setup.</span></div>
+    <div class="path"><div><h3>Marketing Cloud extract to S3</h3><p>A scheduled automation queries the send, open, click, bounce, and unsubscribe data views and drops files in S3.</p></div><span>Hourly to daily</span><span>Raw event rows, keyed by subscriber</span><span>Low. A familiar pattern, more files to manage.</span></div>
+    <div class="path"><div><h3>Event triggers</h3><p>Data 360 data actions post a webhook when a key event happens, such as an unsubscribe or a click on a trip.</p></div><span>Near real time</span><span>Only the events you choose</span><span>Medium. Expedia hosts an endpoint.</span></div>
+    <div class="path"><div><h3>The decision log</h3><p>Every prediction, with its score, reasons, and mode, appended to a history table. Join it to engagement to see what each decision led to.</p><span class="proof">Running in our sandbox as saturation_predictions_history</span></div><span>As each decision is made</span><span>One row per decision</span><span>Low. The model already writes it.</span></div>
+  </div>
+  <p class="holdout"><span class="badge back" aria-hidden="true">!</span><span>Keep a small random holdout that ignores the model. Without it, the model can only learn from travelers it chose to message.</span></p>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Technical deep dive</span></div>
+</section>
+
+<!-- 15 ---------------------------------------------------------------- -->
+<section class="slide" aria-label="Decisions and next steps">
+  <h2>Decisions to make, and what comes next</h2>
+  <ol class="next">
+    <li><div><h3>Pick the pattern for each journey type</h3><p>Event to a data extension by default, sync or async only where journey context matters</p></div><span class="who">Together</span></li>
+    <li><div><h3>Agree the decision engine API contract</h3><p>Request and response fields, auth, and the default answer when the model is unavailable</p></div><span class="who">Expedia</span></li>
+    <li><div><h3>Finalize the table definition</h3><p>Fields, keys, and update cadence for the predictions data extension, plus the inputs the model needs back</p></div><span class="who">Wes</span></li>
+    <li><div><h3>Choose the engagement return path</h3><p>Data share, S3 extract, or both, plus the holdout design</p></div><span class="who">Expedia</span></li>
+    <li><div><h3>Prove zero copy on Expedia's lake</h3><p>Connect one Iceberg table on S3 to Data 360 in a sandbox</p></div><span class="who">Together</span></li>
+    <li><div><h3>Pilot one journey end to end</h3><p>Real model, real journey, a small audience with a holdout</p></div><span class="who">Together</span></li>
+  </ol>
+  <div class="foot"><img src="__LOGO__" alt=""></div>
+</section>
+
+</main>
+
+<nav class="controls" aria-label="Slides">
+  <button id="prev" aria-label="Previous slide"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg></button>
+  <span id="count">1 / 12</span>
+  <button id="next" aria-label="Next slide"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></button>
+</nav>
+
+<script>
+// ---------- deck navigation ----------
+const slides = [...document.querySelectorAll('.slide')];
+const stage = document.getElementById('stage');
+let cur = 0;
+
+function fit() {
+  const s = Math.min(innerWidth / 1600, innerHeight / 900);
+  stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+}
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, j) => s.classList.toggle('active', j === cur));
+  document.getElementById('count').textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === slides.length - 1;
+  document.getElementById('progress').style.width = `${((cur + 1) / slides.length) * 100}%`;
+  history.replaceState(null, '', `#${cur + 1}`);
+}
+addEventListener('resize', fit);
+addEventListener('keydown', (e) => {
+  if (e.target.closest('input, button, select, textarea') && [' ', 'Enter'].includes(e.key)) return;
+  if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1);
+});
+document.getElementById('prev').onclick = () => show(cur - 1);
+document.getElementById('next').onclick = () => show(cur + 1);
+fit();
+show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+
+// ---------- mock journey ----------
+const SCEN = {
+  sam:  { key: 'EXP-100234', initials: 'SO', name: 'Sam', pred: 'abstain', score: '0.785', reason: 'HIGH_SEND_VOLUME_7D|DECLINING_OPEN_RATE|UNSUBSCRIBE_INTENT', hold: '52', branch: 'abstain',
+          end: 'Abstain. Sam is held for 52 hours and gets no email today.' },
+  maya: { key: 'EXP-100233', initials: 'PN', name: 'Priya', pred: 'send', score: '0.304', reason: 'UPCOMING_TRIP_RELEVANCE|ONE_KEY_PLATINUM_TOLERANCE', hold: '0', branch: 'send',
+          end: 'Send. Priya gets the trip inspiration email. Her upcoming trip keeps messages relevant.' },
+  down: { key: 'EXP-100237', initials: 'AT', name: 'Aiko', branch: 'none',
+          end: 'No score arrived, so Aiko takes the default path. You choose what that does: send, hold, or apply a frequency cap.' },
+};
+const POS = { entry: [80, 182], ca: [270, 182], wait: [450, 182], send: [850, 72], abstain: [850, 182], none: [850, 302] };
+const $ = (id) => document.getElementById(id);
+let scen = 'sam', step = 0;
+
+function placeToken(where) {
+  const [x, y] = POS[where];
+  $('token').style.left = `${x}px`; $('token').style.top = `${y}px`;
+}
+function setRow(s, filled) {
+  const v = (x) => (filled ? x : 'empty');
+  $('d-key').textContent = s.key;
+  $('d-pred').textContent = v(s.pred); $('d-score').textContent = v(s.score); $('d-reason').textContent = v(s.reason);
+  $('d-hold').textContent = v(s.hold); $('d-at').textContent = filled ? new Date().toISOString().slice(11, 19) + 'Z' : 'empty';
+  $('deRow').classList.toggle('filled', filled);
+}
+function render() {
+  const s = SCEN[scen];
+  const on = (id, yes) => $(id).classList.toggle('on', yes);
+  $('token').textContent = s.initials;
+  $('token').classList.toggle('hidden', step === 0);
+  $('jCount').textContent = `Step ${step} of 4`;
+  $('jNext').disabled = step === 4;
+  ['w-1', 'w-2', 'w-3'].forEach((w, i) => on(w, step >= 2 + (i === 2 ? 2 : 0)));
+  ['send', 'abstain', 'none'].forEach((b) => { on(`w-${b}`, step === 4 && s.branch === b); on(`w-${b}2`, step === 4 && s.branch === b); });
+  on('o-call', step === 2); $('o-call').classList.add('flow');
+  on('o-back', step === 3 && scen !== 'down'); $('o-back').classList.add('flow');
+  on('o-read', step === 4);
+  $('n-ca').classList.toggle('lit', step === 2);
+  $('n-split').classList.toggle('lit', step === 4);
+  setRow(s, step >= 3 && scen !== 'down');
+
+  const say = (title, body) => { $('say').innerHTML = `<b>${title}</b>${body}`; };
+  if (step === 0) { say('Ready', 'Pick a traveler, then press Next step.'); $('engineState').textContent = 'Waiting for requests'; }
+  if (step >= 1) placeToken(step === 1 ? 'entry' : step < 4 ? 'wait' : s.branch);
+  if (step === 1) { say(`${s.name} enters the journey`, 'An API event fires when the trip-inspiration campaign picks them up.'); $('engineState').textContent = 'Waiting for requests'; }
+  if (step === 2) { say('The journey asks and moves on', `The custom activity sends ${s.key} to the model, gets an acknowledgement in a few milliseconds, and ${s.name} moves straight into the wait.`); $('engineState').textContent = `Scoring ${s.key}`; }
+  if (step === 3) {
+    if (scen === 'down') { say('Nothing comes back', 'The model timed out. The contact data row stays empty.'); $('engineState').textContent = 'No response'; }
+    else { say('The model writes its answer', 'It upserts the row in contact data. The journey never waited for this.'); $('engineState').textContent = `Score ${s.score}, ${s.pred}`; }
+  }
+  if (step === 4) say('The split reads contact data', s.end);
+}
+$('jNext').onclick = () => { step = Math.min(4, step + 1); render(); };
+$('jReset').onclick = () => { step = 0; render(); };
+document.querySelectorAll('[data-scen]').forEach((b) => b.onclick = () => {
+  scen = b.dataset.scen; step = 0;
+  document.querySelectorAll('[data-scen]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  render();
+});
+render();
+</script>
+</body>
+</html>

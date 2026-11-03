@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sync-execute-response.schema.json",
+  "title": "Saturation Check (Sync) — execute response (RESTDECISION)",
+  "description": "HTTP 200, application/json. branchResult picks the journey path; the remaining fields are the declared outArguments, readable downstream as {{Interaction.<activityKey>.<field>}}.",
+  "type": "object",
+  "required": ["branchResult", "prediction", "saturationScore", "reasonCodes", "modelVersion"],
+  "properties": {
+    "branchResult": { "type": "string", "enum": ["send", "abstain"], "description": "Must equal an outcome's arguments.branchResult in config.json." },
+    "prediction": { "type": "string", "enum": ["send", "abstain"] },
+    "saturationScore": { "type": "number", "minimum": 0, "maximum": 1, "description": "3 decimal places." },
+    "reasonCodes": { "type": "string", "description": "Pipe-delimited, may be empty string (never null).", "examples": ["HIGH_SEND_VOLUME_7D|DECLINING_OPEN_RATE"] },
+    "modelVersion": { "type": "string", "examples": ["sat-gbm-2026.10.3"] }
+  },
+  "additionalProperties": false
+}
