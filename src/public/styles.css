@@ -242,3 +242,6 @@ pre { margin: 8px 0 0; background: var(--mist); border-radius: 8px; padding: 12p
   .pathways a { padding: 6px 10px; font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) { .de-table tr.flash { transition: none; } }
+
+/* Prototype disclaimer */
+.proto-banner { background: var(--navy); color: #fff; text-align: center; font-size: 13px; padding: 7px 16px; letter-spacing: 0.01em; }

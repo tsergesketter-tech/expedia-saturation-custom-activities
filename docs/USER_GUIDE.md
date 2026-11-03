@@ -1,5 +1,11 @@
 # Custom Activities User Guide
 
+> [!WARNING]
+> **Prototype for illustration only. This is not a production or scale-tested experience.**
+> It was built to demonstrate the integration patterns. It has not been load-tested,
+> hardened, or reviewed for production use. The model is a deterministic stub.
+> Throughput, latency, and error-handling behavior at real journey volumes are unverified.
+
 How to build a Journey Builder custom activity that calls an external model, and what an
 external API owner should expect on the wire. The worked example is the **Expedia
 Saturation Model**, which decides send vs. abstain. Everything here applies to any
@@ -14,6 +20,7 @@ REST-backed custom activity.
 - [7. Security: JWT verification](#7-security-jwt-verification)
 - [8. Testing without Marketing Cloud](#8-testing-without-marketing-cloud)
 - [9. Troubleshooting](#9-troubleshooting)
+- [10. Prototype status and production gaps](#10-prototype-status-and-production-gaps)
 
 ---
 
@@ -87,6 +94,8 @@ the timeout, never return null for a declared outArgument, and, for splits, retu
 `branchResult` that matches a configured outcome key exactly.
 
 ## 3. The three activity patterns in this repo
+
+_The latencies and behaviors described here were observed in a single-user sandbox demo, not under load._
 
 | | Sync split | Sync callout | Async (fire-and-forget) |
 |---|---|---|---|
@@ -309,3 +318,26 @@ synthetic profile, so real journey contacts still score.
 | 401 from `/execute` | Wrong `MCE_JWT_SECRET` (it must come from the same installed package as the activity component) |
 | Decision split after the callout sees stale data | Upsert the DE **before** responding (the callout pattern does this) |
 | `journeyhistory/search` returns nothing | Use the per-version `definitionId`, not the interaction id |
+
+## 10. Prototype status and production gaps
+
+This repo is a **prototype for illustration**. It shows the shape of the integration:
+the config, the contract, and the write-back paths. It is **not** a scale-tested or
+production-ready implementation. In particular:
+
+| Area | Prototype behavior | What production would need |
+|---|---|---|
+| Load / scale | Never load-tested. Exercised by a handful of demo contacts | Load test at expected journey entry rates against `concurrentRequests` (≤ 10 per activity), timeout, and retry settings |
+| Model | Deterministic stub (`src/model.mjs`) | A real model endpoint with its own latency SLOs, versioning, and monitoring |
+| Signature check | Unsigned plain-JSON bodies are accepted for local testing | Reject anything that isn't a valid, unexpired JWT |
+| Abuse controls | No rate limiting, auth on the console API, or WAF | API Gateway throttling, authz on non-activity routes, WAF |
+| State and logging | One DynamoDB table holds travelers, config, and an event timeline | Purpose-built storage, structured logs and metrics, PII handling |
+| Background work | Lambda invokes itself asynchronously; async scoring uses `setTimeout` (≤ 45 s) | A queue (SQS or similar) with retries and a DLQ |
+| Failure paths | Errors are logged; the journey's retry setting is the only retry | A default branch or path for every split when the model can't answer, plus alerting |
+| DE reads | `readAllPredictions` pulls one page of up to 200 rows | Pagination, or no full-table reads at all |
+| Secrets | Read from local files at deploy time and stored as Lambda environment variables | A secrets manager with rotation |
+| Databricks / Data 360 | Personal access tokens; Data 360 data stream not finished | Service principals or OAuth, and a completed, monitored data stream |
+
+The API contract in [§4](#4-api-contract-for-the-external-consumer) and the Journey Builder
+guardrails in [§2](#2-is-the-outbound-schema-guardrailed) still apply to a production
+implementation. The implementation behind them is what needs to change.

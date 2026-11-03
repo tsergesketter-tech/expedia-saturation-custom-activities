@@ -1,15 +1,33 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "callout-execute-response.schema.json",
+  "$comment": "Prototype for illustration only: not a production or scale-tested contract.",
   "title": "Saturation Check (Sync) in callout mode (inArgument mode=callout) — execute response",
   "description": "Returned only after the prediction row is upserted to the Expedia_Saturation_Predictions DE, so a following Decision Split on Contact Data sees fresh data.",
   "type": "object",
-  "required": ["branchResult", "status"],
+  "required": [
+    "branchResult",
+    "status"
+  ],
   "properties": {
-    "branchResult": { "const": "written" },
-    "status": { "const": "written" },
-    "prediction": { "type": "string", "enum": ["send", "abstain"] },
-    "saturationScore": { "type": "number", "minimum": 0, "maximum": 1 }
+    "branchResult": {
+      "const": "written"
+    },
+    "status": {
+      "const": "written"
+    },
+    "prediction": {
+      "type": "string",
+      "enum": [
+        "send",
+        "abstain"
+      ]
+    },
+    "saturationScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
   },
   "additionalProperties": false
 }

@@ -1,10 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "async-execute-response.schema.json",
+  "$comment": "Prototype for illustration only: not a production or scale-tested contract.",
   "title": "Saturation Request (Async) — execute response (REST)",
   "description": "Acknowledgement only. The prediction is delivered later out-of-band (DE upsert and/or S3 file), see prediction-row.schema.json.",
   "type": "object",
-  "required": ["status"],
-  "properties": { "status": { "const": "accepted" } },
+  "required": [
+    "status"
+  ],
+  "properties": {
+    "status": {
+      "const": "accepted"
+    }
+  },
   "additionalProperties": false
 }

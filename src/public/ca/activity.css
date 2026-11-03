@@ -14,3 +14,4 @@ code{background:#eef3fd;color:#0b3d91;padding:1px 6px;border-radius:5px;font-siz
 .flow{display:flex;gap:8px;align-items:center;font-size:13px;flex-wrap:wrap}
 .pill{border-radius:999px;padding:4px 10px;font-weight:600;font-size:12px}
 .send{background:#e3f5ea;color:#0a6b35}.abstain{background:#fde8e8;color:#a01d1d}.neutral{background:#eef3fd;color:#0b3d91}
+.proto{background:#fff6c7;border-color:#e0c34a;font-size:13px;color:#4a3b00}

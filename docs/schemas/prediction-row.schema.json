@@ -1,21 +1,75 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "prediction-row.schema.json",
+  "$comment": "Prototype for illustration only: not a production or scale-tested contract.",
   "title": "Prediction row — Expedia_Saturation_Predictions DE / S3 CSV / Databricks",
   "description": "Shape the model writes back to Marketing Cloud (REST rowset upsert keyed on SubscriberKey, or CSV columns in the same order for the S3 import). Databricks uses snake_case equivalents without JourneyId/ActivityId.",
   "type": "object",
-  "required": ["SubscriberKey", "SaturationScore", "Prediction", "ModelVersion", "ScoringMode", "ScoredAt"],
+  "required": [
+    "SubscriberKey",
+    "SaturationScore",
+    "Prediction",
+    "ModelVersion",
+    "ScoringMode",
+    "ScoredAt"
+  ],
   "properties": {
-    "SubscriberKey": { "type": "string", "maxLength": 50, "description": "Primary key." },
-    "SaturationScore": { "type": "number", "minimum": 0, "maximum": 1, "description": "DE type Decimal(6,3)." },
-    "Prediction": { "type": "string", "enum": ["send", "abstain"] },
-    "ReasonCodes": { "type": "string", "maxLength": 255, "description": "Pipe-delimited." },
-    "RecommendedHoldHours": { "type": "integer", "minimum": 0, "description": "0 when Prediction=send." },
-    "ModelVersion": { "type": "string", "maxLength": 50 },
-    "ScoringMode": { "type": "string", "enum": ["sync", "async", "callout", "event", "batch", "console"] },
-    "ScoredAt": { "type": "string", "format": "date-time", "maxLength": 40 },
-    "JourneyId": { "type": "string", "maxLength": 100 },
-    "ActivityId": { "type": "string", "maxLength": 100 }
+    "SubscriberKey": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "Primary key."
+    },
+    "SaturationScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "DE type Decimal(6,3)."
+    },
+    "Prediction": {
+      "type": "string",
+      "enum": [
+        "send",
+        "abstain"
+      ]
+    },
+    "ReasonCodes": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Pipe-delimited."
+    },
+    "RecommendedHoldHours": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "0 when Prediction=send."
+    },
+    "ModelVersion": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "ScoringMode": {
+      "type": "string",
+      "enum": [
+        "sync",
+        "async",
+        "callout",
+        "event",
+        "batch",
+        "console"
+      ]
+    },
+    "ScoredAt": {
+      "type": "string",
+      "format": "date-time",
+      "maxLength": 40
+    },
+    "JourneyId": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "ActivityId": {
+      "type": "string",
+      "maxLength": 100
+    }
   },
   "additionalProperties": false
 }

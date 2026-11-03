@@ -1,6 +1,7 @@
 #!/bin/bash
 # Idempotent AWS deploy: DynamoDB + S3 + IAM role + Lambda + API Gateway HTTP API.
 # Secrets come from ~/expedia-mce.env and ~/.expedia-sat/ (never committed).
+# PROTOTYPE for illustration only: not a production deployment.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

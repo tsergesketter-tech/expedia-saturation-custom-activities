@@ -1,5 +1,11 @@
 # Expedia Saturation Model: Journey Builder Custom Activities
 
+> [!WARNING]
+> **Prototype for illustration only. This is not a production or scale-tested experience.**
+> It was built to demonstrate the integration patterns. It has not been load-tested,
+> hardened, or reviewed for production use. The model is a deterministic stub.
+> Throughput, latency, and error-handling behavior at real journey volumes are unverified.
+
 This is a reference implementation of Marketing Cloud Engagement **Journey Builder custom
 activities** that call an external ML model, a stub "send-saturation" model that decides
 **send vs. abstain** for each contact. It comes with a live demo console and model-to-MCE
@@ -46,4 +52,5 @@ No secrets are committed. Everything sensitive is read from `~/expedia-mce.env`,
 `~/.expedia-sat/`, or the local Claude MCP config at deploy time.
 
 > The model is a deterministic stub that produces realistic-looking outputs. Replace
-> `src/model.mjs#score` with a call to your real endpoint.
+> `src/model.mjs#score` with a call to your real endpoint. Before any real use, read
+> [Prototype status and production gaps](docs/USER_GUIDE.md#10-prototype-status-and-production-gaps).

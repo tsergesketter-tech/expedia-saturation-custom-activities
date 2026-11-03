@@ -1,4 +1,5 @@
 // Journey Builder custom activity config.json, rendered with the live base URL.
+// PROTOTYPE for illustration only: not production-hardened or scale-tested.
 // sync  = custom split (RESTDECISION): the model's send/abstain picks the branch.
 // async = fire-and-forget REST activity: model calls back via CDC (REST/S3).
 
@@ -20,7 +21,7 @@ export function activityConfig(kind, baseUrl) {
     return {
       ...common,
       type: 'RESTDECISION',
-      lang: { 'en-US': { name: 'Expedia Saturation Check (Sync)', description: 'Calls the saturation model in real time and branches Send / Abstain.' } },
+      lang: { 'en-US': { name: 'Expedia Saturation Check (Sync)', description: 'PROTOTYPE (illustration, not scale-tested). Calls the saturation model in real time and branches Send / Abstain.' } },
       arguments: {
         execute: {
           inArguments: [{ contactKey: '{{Contact.Key}}' }],
@@ -52,7 +53,7 @@ export function activityConfig(kind, baseUrl) {
   return {
     ...common,
     type: 'REST',
-    lang: { 'en-US': { name: 'Expedia Saturation Request (Async)', description: 'Fire-and-forget scoring request; model pushes the prediction back to contact data.' } },
+    lang: { 'en-US': { name: 'Expedia Saturation Request (Async)', description: 'PROTOTYPE (illustration, not scale-tested). Fire-and-forget scoring request; model pushes the prediction back to contact data.' } },
     arguments: {
       execute: {
         inArguments: [{ contactKey: '{{Contact.Key}}' }, { delaySec: '8' }, { cdcMode: 'rest' }],

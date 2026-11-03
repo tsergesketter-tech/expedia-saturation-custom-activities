@@ -1,5 +1,6 @@
 // Stub "Expedia Saturation Model". Deterministic, explainable scoring so the demo
 // outputs look like a real model: score in [0,1], send/abstain, reason codes.
+// PROTOTYPE for illustration only: not a real model.
 
 export const MODEL_VERSION = 'sat-gbm-2026.10.3';
 

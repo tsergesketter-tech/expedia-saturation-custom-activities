@@ -1,5 +1,6 @@
-// Lambda (Function URL) entry point: demo console API, MCE custom activity endpoints,
+// Lambda (API Gateway) entry point: demo console API, MCE custom activity endpoints,
 // stub saturation model, and background CDC/Databricks jobs.
+// PROTOTYPE for illustration only: not production-hardened or scale-tested.
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';

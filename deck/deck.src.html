@@ -335,7 +335,7 @@ code, .code { font-family: var(--mono); font-size: 0.86em; }
   <img class="logo" src="__LOGO__" alt="Expedia">
   <h1>Knowing when to send, and when to hold</h1>
   <p class="sub">Working session on decisioning between Expedia's model and Salesforce Marketing Cloud, in batch and in real time</p>
-  <p class="who">Expedia and Salesforce</p>
+  <p class="who">Expedia and Salesforce · Prototype for illustration, not a production or scale-tested experience</p>
   <div class="verdicts" aria-hidden="true">
     <div class="verdict"><span class="score abstain">0.79</span><b>Abstain: hold Sam for 52 hours</b><small>Six sends this week, opens down to 12%, visited the unsubscribe page twice</small></div>
     <div class="verdict light"><span class="score send" style="color:#fff">0.30</span><b>Send: Priya's trip is in 9 days</b><small>Platinum member, pre-trip messages stay relevant</small></div>
@@ -589,7 +589,7 @@ code, .code { font-family: var(--mono); font-size: 0.86em; }
     <div><p class="plus">The freshest answer, decided on the spot</p><p class="minus">Every traveler waits on a decision. When thousands enter at once they queue behind the model, so it doesn't scale well.</p></div>
     <div><p class="plus">Fire and forget. The journey keeps moving and the model works at its own pace.</p><p class="minus">Needs a short wait step, and a default for travelers whose answer hasn't landed</p></div>
   </div>
-  <div class="foot"><img src="__LOGO__" alt=""><span>Scale discussion</span></div>
+  <div class="foot"><img src="__LOGO__" alt=""><span>Scale discussion · architectural reasoning, not load-test results</span></div>
 </section>
 
 <!-- 10 ---------------------------------------------------------------- -->
@@ -654,11 +654,12 @@ code, .code { font-family: var(--mono); font-size: 0.86em; }
 <!-- 11 ---------------------------------------------------------------- -->
 <section class="slide" aria-label="Running in our sandbox">
   <h2>The prototype, running in our sandbox</h2>
+  <p class="lede">Built to illustrate the patterns. Single-user sandbox timings, not scale-tested.</p>
   <div class="sandbox">
     <div class="shot"><img src="__CONSOLE__" alt="Demo console showing Maya Chen scored Send at 0.62, with each call between Marketing Cloud and the model listed in order and the prediction read back from Marketing Cloud and Databricks"></div>
     <ul class="built">
       <li><div><b>Published journey in the Expedia business unit</b><span>API event entry, a real-time split, and an async request on each branch</span></div></li>
-      <li><div><b>Model endpoint on AWS</b><span>A stand-in model behind API Gateway and Lambda. It answered the split in 35 ms and checks Marketing Cloud's signature on each call.</span></div></li>
+      <li><div><b>Model endpoint on AWS</b><span>A stand-in model behind API Gateway and Lambda. In the sandbox it answered the split in 35 ms, and it checks Marketing Cloud's signature on each call.</span></div></li>
       <li><div><b>Write-back to contact data, two ways</b><span>REST upsert into the predictions data extension, or an S3 file loaded by a Marketing Cloud import automation</span></div></li>
       <li><div><b>Batch scores in an Iceberg-readable table</b><span>Delta table in Databricks with Iceberg reads turned on, plus an append-only decision log</span></div></li>
       <li class="pending"><div><b>Data 360 zero copy</b><span>Connection is active and the data model object is defined. The data stream to the table is the last step.</span></div></li>
