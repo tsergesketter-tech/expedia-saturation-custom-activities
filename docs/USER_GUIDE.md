@@ -37,7 +37,7 @@ sequenceDiagram
   participant DE as Contact Data (DE)
   JB->>API: POST /execute (JWT: inArguments + journey ids)
   API-->>JB: 200 {branchResult, ...outArguments}
-  Note over JB: RESTDECISION routes by branchResult;<br/>outArguments → {{Interaction.KEY.field}}
+  Note over JB: RESTDECISION routes by branchResult<br/>outArguments become Interaction.KEY.field
   API--)DE: (optional) async upsert of prediction row
 ```
 
@@ -99,10 +99,10 @@ the timeout, never return null for a declared outArgument, and, for splits, retu
 
 ```mermaid
 flowchart LR
-  E[API Event entry] --> S{Sync split<br/>RESTDECISION}
-  S -- send --> A1[Async request] --> W1[Wait] --> Email
-  S -- abstain --> A2[Async request] --> W2[Wait] --> Hold
-  E2[API Event entry] --> C[Sync callout<br/>writes DE] --> D{Decision Split<br/>on Predictions DE}
+  E["API Event entry"] --> S{"Sync split<br/>RESTDECISION"}
+  S -- send --> A1["Async request"] --> W1["Wait"] --> Email["Email"]
+  S -- abstain --> A2["Async request"] --> W2["Wait"] --> Hold["Hold"]
+  E2["API Event entry"] --> C["Sync callout<br/>writes DE"] --> D{"Decision Split<br/>on Predictions DE"}
 ```
 
 ## 4. API contract (for the external consumer)
